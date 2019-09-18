@@ -2,6 +2,7 @@
 # Edit at https://www.gitignore.io/?templates=python
 
 config.ini
+LiveTool.json
 .vscode/
 
 ### Python ###
