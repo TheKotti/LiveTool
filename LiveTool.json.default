@@ -1,0 +1,8 @@
+{
+  "title": "Stream/message title",
+  "game": "Game title",
+  "url": "Twitch url",
+  "twitch": false,
+  "discord": false,
+  "twitter": false
+}

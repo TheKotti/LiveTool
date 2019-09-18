@@ -18,13 +18,13 @@ title = data['title']
 game = data['game']
 url = data['url']
 
+
 """TWITCH"""
 if data['twitch']:
     http = urllib3.PoolManager()
     encoded_args = urlencode({
         'channel[status]': title,
-        'channel[game]': game,
-        'channel[message]': 'asdfasdfasdfs'
+        'channel[game]': game
     })
     url = 'https://api.twitch.tv/kraken/channels/' + \
         config['TWITCH']['user_id'] + '?' + encoded_args
