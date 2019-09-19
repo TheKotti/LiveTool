@@ -16,7 +16,7 @@ with open(os.path.join(location, 'LiveTool.json')) as json_file:
     data = json.load(json_file)
 title = data['title']
 game = data['game']
-url = data['url']
+stream_url = data['url']
 
 
 """TWITCH"""
@@ -43,7 +43,7 @@ if data['twitch']:
 
 """DISCORD"""
 if data['discord']:
-    discord_message = title + ": " + url
+    discord_message = title + ": " + stream_url
     webhook = DiscordWebhook(
         url=config['DISCORD']['webhook_url'], content=discord_message)
     webhook.execute()
@@ -51,7 +51,7 @@ if data['discord']:
 
 """TWITTER"""
 if data['twitter']:
-    tweet = title + "\n\n" + url
+    tweet = title + "\n\n" + stream_url
     twitterApi = twitter.Api(consumer_key=config['TWITTER']['consumer_key'],
                              consumer_secret=config['TWITTER']['consumer_secret'],
                              access_token_key=config['TWITTER']['access_token_key'],
