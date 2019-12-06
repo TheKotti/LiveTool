@@ -4,5 +4,6 @@
   "url": "Twitch url",
   "twitch": false,
   "discord": false,
-  "twitter": false
+  "twitter": false,
+  "igdb": false
 }

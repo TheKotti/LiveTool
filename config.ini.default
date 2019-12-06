@@ -6,8 +6,13 @@ access_token_secret = twitter_access_token_secret
 
 [TWITCH]
 oauth_token = OAuth oauth_token
+refresh_token = refresh_token
 client_id = client_id
+client_secret = client_secret
 user_id = user_id
 
 [DISCORD]
 webhook_url = webhook_url
+
+[IGDB]
+user_key = user_key

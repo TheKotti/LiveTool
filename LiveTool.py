@@ -18,29 +18,48 @@ title = data['title']
 game = data['game']
 stream_url = data['url']
 
+"""IGDB"""
+if data['igdb']:
+    http = urllib3.PoolManager()
+    igdb_request = http.request(
+        'GET',
+        'https://api-v3.igdb.com/games',
+        body='search "' + game + '"; fields name;',
+        headers={'Content-Type': 'application/json', 'user-key': config['IGDB']['user_key']})
+    games_data = json.loads(igdb_request.data)
+    games_list = []
+    for elem in games_data:
+        games_list.append(elem['name'].upper())
+    if game.upper() not in games_list and len(games_list) > 0:
+        game = games_list[0]
+print(game)
+
 
 """TWITCH"""
 if data['twitch']:
     http = urllib3.PoolManager()
 
-    """Refresh OAuth token"""
-    refresh_args = urlencode({
-        'client_id': config['TWITCH']['client_id'],
-        'client_secret': config['TWITCH']['client_secret'],
-        'grant_type': 'refresh_token',
-        'refresh_token': config['TWITCH']['refresh_token']
-    })
-    refresh_url = 'https://id.twitch.tv/oauth2/token?' + refresh_args
-    refresh_request = http.request(
-        'POST',
-        refresh_url
-    )
-    new_token = json.loads(refresh_request.data)['access_token']
-    config.set('TWITCH', 'oauth_token', 'OAuth ' + new_token)
-    with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
-        config.write(cnf_file)
+    """ Refresh OAuth token """
+    if config['TWITCH']['refresh_token'] != 'refresh_token':
+        refresh_args = urlencode({
+            'client_id': config['TWITCH']['client_id'],
+            'client_secret': config['TWITCH']['client_secret'],
+            'grant_type': 'refresh_token',
+            'refresh_token': config['TWITCH']['refresh_token']
+        })
+        refresh_url = 'https://id.twitch.tv/oauth2/token?' + refresh_args
+        refresh_request = http.request(
+            'POST',
+            refresh_url
+        )
+        new_token = json.loads(refresh_request.data)['access_token']
+        new_refresh_token = json.loads(refresh_request.data)['refresh_token']
+        config.set('TWITCH', 'oauth_token', 'OAuth ' + new_token)
+        config.set('TWITCH', 'refresh_token', new_refresh_token)
+        with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
+            config.write(cnf_file)
 
-    """Set new stream info"""
+    """ Set new stream info """
     twitch_args = urlencode({
         'channel[status]': title,
         'channel[game]': game
@@ -58,7 +77,6 @@ if data['twitch']:
         }
     )
     print(json.loads(twitch_request.data.decode('utf-8')))
-
 
 """DISCORD"""
 if data['discord']:
