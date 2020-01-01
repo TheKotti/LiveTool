@@ -4,8 +4,14 @@ import sys
 import configparser
 import twitter
 import urllib3
+import datetime
 from urllib.parse import urlencode
 from discord_webhook import DiscordWebhook
+from google.oauth2.credentials import Credentials
+import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 location = sys.path[0]
 
@@ -16,7 +22,11 @@ with open(os.path.join(location, 'LiveTool.json')) as json_file:
     data = json.load(json_file)
 title = data['title']
 game = data['game']
-stream_url = data['url']
+streams = []
+data['twitch'] and streams.append(data['twitchUrl'])
+data['youtube'] and streams.append(data['ytUrl'])
+stream_url = ' | '.join(streams)
+
 
 """IGDB"""
 if data['igdb']:
@@ -32,7 +42,6 @@ if data['igdb']:
         games_list.append(elem['name'].upper())
     if game.upper() not in games_list and len(games_list) > 0:
         game = games_list[0]
-print(game)
 
 
 """TWITCH"""
@@ -77,6 +86,43 @@ if data['twitch']:
         }
     )
     print(json.loads(twitch_request.data.decode('utf-8')))
+
+"""YOUTUBE"""
+if data['youtube']:
+    """If no refresh token is set, create one"""
+    if config['YOUTUBE']['refresh_token'] == 'refresh_token':
+        yt_scopes = ['https://www.googleapis.com/auth/youtube']
+        yt_secrets = 'youtube_secret.json'
+        flow = InstalledAppFlow.from_client_secrets_file(
+            yt_secrets, yt_scopes)
+        credentials = flow.run_console()
+        config.set('YOUTUBE', 'refresh_token', credentials.refresh_token)
+        with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
+            config.write(cnf_file)
+
+    yt_credentials = Credentials(
+        None,
+        refresh_token=config['YOUTUBE']['refresh_token'],
+        token_uri="https://accounts.google.com/o/oauth2/token",
+        client_id=config['YOUTUBE']['client_id'],
+        client_secret=config['YOUTUBE']['client_secret'],
+    )
+
+    youtube = build('youtube', 'v3', credentials=yt_credentials)
+    timeNow = datetime.datetime.now().isoformat()[:-6] + '000Z'
+
+    insert_broadcast_response = youtube.liveBroadcasts().insert(
+        part="snippet,status",
+        body=dict(
+            snippet=dict(
+                title=title,
+                scheduledStartTime=timeNow
+            ),
+            status=dict(
+                privacyStatus="public"
+            )
+        )
+    ).execute()
 
 """DISCORD"""
 if data['discord']:

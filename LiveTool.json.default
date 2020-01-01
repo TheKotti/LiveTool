@@ -1,8 +1,10 @@
 {
   "title": "Stream/message title",
   "game": "Game title",
-  "url": "Twitch url",
+  "twitchUrl": "Twitch url",
+  "ytUrl": "Youtube url",
   "twitch": false,
+  "youtube": false,
   "discord": false,
   "twitter": false,
   "igdb": false

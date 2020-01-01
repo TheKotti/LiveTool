@@ -16,3 +16,8 @@ webhook_url = webhook_url
 
 [IGDB]
 user_key = user_key
+
+[YOUTUBE]
+client_id = client_id
+client_secret = client_secret
+refresh_token = refresh_token
