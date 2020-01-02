@@ -111,18 +111,25 @@ if data['youtube']:
     youtube = build('youtube', 'v3', credentials=yt_credentials)
     timeNow = datetime.datetime.now().isoformat()[:-6] + '000Z'
 
-    insert_broadcast_response = youtube.liveBroadcasts().insert(
-        part="snippet,status",
+    list_broadcasts_request = youtube.liveBroadcasts().list(
+        part='id,snippet',
+        maxResults=1,
+        mine=True,
+        broadcastType='all'
+    )
+
+    list_broadcasts_response = list_broadcasts_request.execute()
+    broadcast_snippet = list_broadcasts_response['items'][0]['snippet']
+    broadcast_snippet['title'] = title
+
+    update_broadcast_request = youtube.liveBroadcasts().update(
+        part='id,snippet',
         body=dict(
-            snippet=dict(
-                title=title,
-                scheduledStartTime=timeNow
-            ),
-            status=dict(
-                privacyStatus="public"
-            )
+            snippet=broadcast_snippet,
+            id=list_broadcasts_response['items'][0]['id']
         )
     ).execute()
+
 
 """DISCORD"""
 if data['discord']:
