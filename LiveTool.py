@@ -34,12 +34,14 @@ if data['igdb']:
     igdb_request = http.request(
         'GET',
         'https://api-v3.igdb.com/games',
-        body='search "' + game + '"; fields name;',
+        body='search "' + game + '"; fields name,category;',
         headers={'Content-Type': 'application/json', 'user-key': config['IGDB']['user_key']})
     games_data = json.loads(igdb_request.data)
     games_list = []
     for elem in games_data:
-        games_list.append(elem['name'].upper())
+        if elem['category'] == 0:
+            games_list.append(elem['name'].upper())
+
     if game.upper() not in games_list and len(games_list) > 0:
         game = games_list[0]
 
