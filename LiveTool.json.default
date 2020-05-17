@@ -1,6 +1,7 @@
 {
   "title": "Stream/message title",
   "game": "Game title",
+  "suffix": "!command",
   "twitchUrl": "Twitch url",
   "ytUrl": "Youtube url",
   "twitch": false,

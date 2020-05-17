@@ -22,8 +22,9 @@ with open(os.path.join(location, 'LiveTool.json')) as json_file:
     data = json.load(json_file)
 title = data['title']
 game = data['game']
+suffix = data['suffix']
 streams = []
-data['twitch'] and streams.append(data['twitchUrl'])
+streams.append(data['twitchUrl'])
 data['youtube'] and streams.append(data['ytUrl'])
 stream_url = ' | '.join(streams)
 
@@ -71,8 +72,9 @@ if data['twitch']:
             config.write(cnf_file)
 
     """ Set new stream info """
+    title_with_suffix = title + ' | ' + suffix if suffix != '' else title
     twitch_args = urlencode({
-        'channel[status]': title,
+        'channel[status]': title_with_suffix,
         'channel[game]': game
     })
     twitch_udpate_url = 'https://api.twitch.tv/kraken/channels/' + \
