@@ -5,6 +5,8 @@ import configparser
 import twitter
 import urllib3
 import datetime
+import difflib
+import time
 from urllib.parse import urlencode
 from discord_webhook import DiscordWebhook
 from google.oauth2.credentials import Credentials
@@ -42,9 +44,9 @@ if data['igdb']:
     for elem in games_data:
         if elem['category'] == 0:
             games_list.append(elem['name'].upper())
-
     if game.upper() not in games_list and len(games_list) > 0:
-        game = games_list[0]
+        best_matches = difflib.get_close_matches(game, games_list, 3, 0)
+        game = best_matches[0]
 
 
 """TWITCH"""
@@ -89,7 +91,7 @@ if data['twitch']:
             'Authorization': config['TWITCH']['oauth_token']
         }
     )
-    print(json.loads(twitch_request.data.decode('utf-8')))
+    print('GAME: ' + json.loads(twitch_request.data.decode('utf-8'))['game'])
 
 """YOUTUBE"""
 if data['youtube']:
@@ -153,4 +155,5 @@ if data['twitter']:
 
     twitterApi.PostUpdate(tweet)
 
+time.sleep(5)
 exit()
