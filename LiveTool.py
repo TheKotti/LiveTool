@@ -47,6 +47,7 @@ if data['igdb']:
     if game.upper() not in games_list and len(games_list) > 0:
         best_matches = difflib.get_close_matches(game, games_list, 3, 0)
         game = best_matches[0]
+    print('Game title fetched (' + game + ')')
 
 
 """TWITCH"""
@@ -91,7 +92,7 @@ if data['twitch']:
             'Authorization': config['TWITCH']['oauth_token']
         }
     )
-    print('GAME: ' + json.loads(twitch_request.data.decode('utf-8'))['game'])
+    print('Twitch info changed')
 
 """YOUTUBE"""
 if data['youtube']:
@@ -135,6 +136,7 @@ if data['youtube']:
             id=list_broadcasts_response['items'][0]['id']
         )
     ).execute()
+    print('Youtube info changed')
 
 
 """DISCORD"""
@@ -143,6 +145,7 @@ if data['discord']:
     webhook = DiscordWebhook(
         url=config['DISCORD']['webhook_url'], content=discord_message)
     webhook.execute()
+    print('Discord message posted')
 
 
 """TWITTER"""
@@ -154,6 +157,8 @@ if data['twitter']:
                              access_token_secret=config['TWITTER']['access_token_secret'])
 
     twitterApi.PostUpdate(tweet)
+    print('Tweet posted')
 
-time.sleep(5)
+print('Exiting...')
+time.sleep(3)
 exit()
