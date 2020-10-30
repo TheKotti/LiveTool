@@ -15,7 +15,7 @@ user_id = user_id
 webhook_url = webhook_url
 
 [IGDB]
-user_key = user_key
+token = token
 
 [YOUTUBE]
 client_id = client_id
