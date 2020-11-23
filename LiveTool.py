@@ -81,28 +81,28 @@ if data['twitch']:
             config.set('TWITCH', 'refresh_token', new_refresh_token)
             with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
                 config.write(cnf_file)
+
+        """ Set new stream info """
+        title_with_suffix = title + ' | ' + suffix if suffix != '' else title
+        twitch_args = urlencode({
+            'channel[status]': title_with_suffix,
+            'channel[game]': game
+        })
+        twitch_udpate_url = 'https://api.twitch.tv/kraken/channels/' + \
+            config['TWITCH']['user_id'] + '?' + twitch_args
+
+        twitch_request = http.request(
+            'PUT',
+            twitch_udpate_url,
+            headers={
+                'Client-ID': config['TWITCH']['client_id'],
+                'Accept': 'application/vnd.twitchtv.v5+json',
+                'Authorization': config['TWITCH']['oauth_token']
+            }
+        )
+        print('Twitch info changed')
     except:
         print("TWITCH ERROR")
-
-    """ Set new stream info """
-    title_with_suffix = title + ' | ' + suffix if suffix != '' else title
-    twitch_args = urlencode({
-        'channel[status]': title_with_suffix,
-        'channel[game]': game
-    })
-    twitch_udpate_url = 'https://api.twitch.tv/kraken/channels/' + \
-        config['TWITCH']['user_id'] + '?' + twitch_args
-
-    twitch_request = http.request(
-        'PUT',
-        twitch_udpate_url,
-        headers={
-            'Client-ID': config['TWITCH']['client_id'],
-            'Accept': 'application/vnd.twitchtv.v5+json',
-            'Authorization': config['TWITCH']['oauth_token']
-        }
-    )
-    print('Twitch info changed')
 
 """YOUTUBE"""
 if data['youtube']:
@@ -173,7 +173,11 @@ if data['twitter']:
                                  access_token_key=config['TWITTER']['access_token_key'],
                                  access_token_secret=config['TWITTER']['access_token_secret'])
 
-        twitterApi.PostUpdate(tweet)
+        twitter_res = twitterApi.PostUpdate(tweet)
+
+        config.set('TWITTER', 'last_tweet', twitter_res.id_str)
+        with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
+            config.write(cnf_file)
         print('Tweet posted')
     except:
         print("TWITTER ERROR")
