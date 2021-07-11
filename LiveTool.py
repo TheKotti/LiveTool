@@ -35,6 +35,23 @@ stream_url = ' | '.join(streams)
 if data['igdb']:
     try:
         http = urllib3.PoolManager()
+
+        """ Refresh access token """
+        refresh_args = urlencode({
+            'client_id': config['TWITCH']['client_id'],
+            'client_secret': config['TWITCH']['client_secret'],
+            'grant_type': 'client_credentials',
+        })
+        refresh_url = 'https://id.twitch.tv/oauth2/token?' + refresh_args
+        refresh_request = http.request(
+            'POST',
+            refresh_url
+        )
+        new_token = json.loads(refresh_request.data)['access_token']
+        config.set('IGDB', 'token', 'Bearer ' + new_token)
+        with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
+            config.write(cnf_file)
+
         igdb_request = http.request(
             'POST',
             'https://api.igdb.com/v4/games',
@@ -52,8 +69,8 @@ if data['igdb']:
             best_matches = difflib.get_close_matches(game, games_list, 3, 0)
             game = best_matches[0]
         print('Game title fetched (' + game + ')')
-    except:
-        print("IGDB ERROR")
+    except Exception as e:
+        print("IGDB ERROR", e)
 
 
 """TWITCH"""
@@ -148,7 +165,8 @@ if data['youtube']:
             )
         ).execute()
         print('Youtube info changed')
-    except:
+    except Exception as e:
+        print(e)
         print("YOUTUBE ERROR")
 
 
@@ -167,7 +185,7 @@ if data['discord']:
 """TWITTER"""
 if data['twitter']:
     try:
-        tweet = title + "\n\n" + stream_url
+        tweet = "[🔴LIVE]\n\n" + title + "\n\n" + stream_url
         twitterApi = twitter.Api(consumer_key=config['TWITTER']['consumer_key'],
                                  consumer_secret=config['TWITTER']['consumer_secret'],
                                  access_token_key=config['TWITTER']['access_token_key'],
