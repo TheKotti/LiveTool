@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import configparser
+import requests
 import twitter
 import urllib3
 import datetime
@@ -12,6 +13,7 @@ from discord_webhook import DiscordWebhook
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
+from operator import itemgetter
 
 location = sys.path[0]
 
@@ -21,7 +23,7 @@ config.read(os.path.join(location, "config.ini"))
 with open(os.path.join(location, 'LiveTool.json')) as json_file:
     data = json.load(json_file)
 title = data['title']
-game = data['game']
+game_title = data['game']
 suffix = data['suffix']
 streams = []
 streams.append(data['twitchUrl'])
@@ -53,20 +55,46 @@ if data['igdb']:
         igdb_request = http.request(
             'POST',
             'https://api.igdb.com/v4/games',
-            body='search "' + game + '"; fields name,category;',
+            body='search "' + game_title +
+            '"; fields name,category,cover.image_id,release_dates.y;',
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': config['IGDB']['token'],
                 'Client-ID': config['TWITCH']['client_id']})
         games_data = json.loads(igdb_request.data)
+
+        """ Get a list without non-games as [title, coverId], and a list with just title """
         games_list = []
+        games_list_with_meta = []
         for elem in games_data:
             if elem['category'] == 0:
-                games_list.append(elem['name'].upper())
-        if game.upper() not in games_list and len(games_list) > 0:
-            best_matches = difflib.get_close_matches(game, games_list, 3, 0)
-            game = best_matches[0]
-        print('Game title fetched (' + game + ')')
+                games_list.append(elem['name'])
+                if 'release_dates' in elem:
+                    release_year = min(
+                        elem['release_dates'], key=itemgetter('y'))['y']
+                else:
+                    release_year = '???'
+                games_list_with_meta.append(
+                    [elem['name'], elem['cover']['image_id'], release_year])
+
+        """ Set game_title and game_cover_id based on index of the closest matching title """
+        best_matches = difflib.get_close_matches(game_title, games_list, 3, 0)
+        best_index = games_list.index(best_matches[0])
+        game_title = games_list_with_meta[best_index][0]
+        game_cover_id = games_list_with_meta[best_index][1]
+        game_year = str(games_list_with_meta[best_index][2])
+
+        """ Set game title in file for OBS """
+        with open(config['LOCAL']['meta_path'] + '/gametitle.txt', 'w') as game_title_file:
+            game_title_file.write(game_title + ' (' + game_year + ')')
+
+        game_cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + \
+            game_cover_id + '.jpg'
+        game_cover_res = requests.get(game_cover_url)
+        with open(config['LOCAL']['meta_path'] + '/cover.png', 'wb') as game_cover_file:
+            game_cover_file.write(game_cover_res.content)
+
+        print('Game metadata fetched (' + game_title + ')')
     except Exception as e:
         print("IGDB ERROR")
         print(e)
@@ -100,7 +128,7 @@ if data['twitch']:
 
         """" Get game id """
         game_id_args = urlencode({
-            'name': game
+            'name': game_title
         })
         game_id_url = 'https://api.twitch.tv/helix/games?' + game_id_args
         game_id_request = http.request(
