@@ -70,12 +70,18 @@ if data['igdb']:
             if elem['category'] == 0:
                 games_list.append(elem['name'])
                 if 'release_dates' in elem:
-                    release_year = min(
-                        elem['release_dates'], key=itemgetter('y'))['y']
+
+                    """ Hacky shit to filter unreleased games. I can't into Python """
+                    if len(elem['release_dates']) == 1 and 'y' not in elem['release_dates'][0]:
+                        release_year = '???'
+                    else:
+                        release_year = min(
+                            elem['release_dates'], key=itemgetter('y'))['y']
                 else:
                     release_year = '???'
+                cover = elem['cover']['image_id'] if 'cover' in elem else 'nocover'
                 games_list_with_meta.append(
-                    [elem['name'], elem['cover']['image_id'], release_year])
+                    [elem['name'], cover, release_year])
 
         """ Set game_title and game_cover_id based on index of the closest matching title """
         best_matches = difflib.get_close_matches(game_title, games_list, 3, 0)
