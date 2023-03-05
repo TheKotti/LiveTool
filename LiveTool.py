@@ -67,7 +67,7 @@ if data['igdb']:
         games_list = []
         games_list_with_meta = []
         for elem in games_data:
-            if elem['category'] == 0:
+            if elem['category'] in [0, 3, 4, 8]:  # [game, bundle, standalone_expansion, remake]
                 games_list.append(elem['name'])
                 if 'release_dates' in elem:
 
