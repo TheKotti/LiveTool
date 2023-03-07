@@ -56,7 +56,7 @@ if data['igdb']:
             'POST',
             'https://api.igdb.com/v4/games',
             body='search "' + game_title +
-            '"; fields name,category,cover.image_id,release_dates.y;',
+            '"; fields name,category,cover.image_id,release_dates.y,genres.name,themes.name,involved_companies.company.name, involved_companies.developer;',
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': config['IGDB']['token'],
@@ -66,9 +66,12 @@ if data['igdb']:
         """ Get a list without non-games as [title, coverId], and a list with just title """
         games_list = []
         games_list_with_meta = []
+        genres = []
+        developers = []
         for elem in games_data:
             if elem['category'] in [0, 3, 4, 8]:  # [game, bundle, standalone_expansion, remake]
                 games_list.append(elem['name'])
+
                 if 'release_dates' in elem:
 
                     """ Hacky shit to filter unreleased games. I can't into Python """
@@ -79,6 +82,20 @@ if data['igdb']:
                             elem['release_dates'], key=itemgetter('y'))['y']
                 else:
                     release_year = '???'
+
+                if 'genres' in elem:
+                    for genre in elem['genres']:
+                        genres.append(genre['name'])
+
+                if 'themes' in elem:
+                    for theme in elem['themes']:
+                        genres.append(theme['name'])
+
+                if 'involved_companies' in elem:
+                    for comp in elem['involved_companies']:
+                        if (comp['developer']):
+                            developers.append(comp['company']['name'])
+
                 cover = elem['cover']['image_id'] if 'cover' in elem else 'nocover'
                 games_list_with_meta.append(
                     [elem['name'], cover, release_year])
@@ -93,6 +110,9 @@ if data['igdb']:
         """ Set game title in file for OBS """
         with open(config['LOCAL']['meta_path'] + '/gametitle.txt', 'w') as game_title_file:
             game_title_file.write(game_title + ' (' + game_year + ')')
+        with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
+            bottom_text_file.write(
+                'DEVELOPED BY: ' + ', '.join(developers) + '\nGENRES: ' + ', '.join(genres))
 
         game_cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + \
             game_cover_id + '.jpg'
