@@ -94,6 +94,7 @@ if data['igdb']:
                 if 'involved_companies' in elem:
                     for comp in elem['involved_companies']:
                         if (comp['developer']):
+                            print(comp)
                             developers.append(comp['company']['name'])
 
                 cover = elem['cover']['image_id'] if 'cover' in elem else 'nocover'
@@ -112,7 +113,7 @@ if data['igdb']:
             game_title_file.write(game_title + ' (' + game_year + ')')
         with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
             bottom_text_file.write(
-                'DEVELOPED BY: ' + ', '.join(developers) + '\nGENRES: ' + ', '.join(genres))
+                'DEVELOPED BY: ' + ', '.join(list(dict.fromkeys(developers))) + '\nGENRES: ' + ', '.join(list(dict.fromkeys(genres))))
 
         game_cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + \
             game_cover_id + '.jpg'
