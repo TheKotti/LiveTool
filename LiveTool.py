@@ -94,7 +94,6 @@ if data['igdb']:
                 if 'involved_companies' in elem:
                     for comp in elem['involved_companies']:
                         if (comp['developer']):
-                            print(comp)
                             developers.append(comp['company']['name'])
 
                 cover = elem['cover']['image_id'] if 'cover' in elem else 'nocover'
@@ -111,9 +110,12 @@ if data['igdb']:
         """ Set game title in file for OBS """
         with open(config['LOCAL']['meta_path'] + '/gametitle.txt', 'w') as game_title_file:
             game_title_file.write(game_title + ' (' + game_year + ')')
-        with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
-            bottom_text_file.write(
-                'DEVELOPED BY: ' + ', '.join(list(dict.fromkeys(developers))) + '\nGENRES: ' + ', '.join(list(dict.fromkeys(genres))))
+
+        """ Set genres and developers from IGDB """
+        if (data['igdbBottomText']):
+            with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
+                bottom_text_file.write(
+                    'DEVELOPED BY: ' + ', '.join(list(dict.fromkeys(developers))) + '\nGENRES: ' + ', '.join(list(dict.fromkeys(genres))))
 
         game_cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/' + \
             game_cover_id + '.jpg'

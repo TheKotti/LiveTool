@@ -8,5 +8,6 @@
   "youtube": false,
   "discord": false,
   "twitter": false,
-  "igdb": false
+  "igdb": false,
+  "igdbBottomText": false
 }
