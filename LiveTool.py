@@ -8,6 +8,7 @@ import urllib3
 import datetime
 import difflib
 import time
+import openai
 from urllib.parse import urlencode
 from discord_webhook import DiscordWebhook
 from google.oauth2.credentials import Credentials
@@ -126,6 +127,35 @@ if data['igdb']:
         print('Game metadata fetched (' + game_title + ')')
     except Exception as e:
         print("IGDB ERROR")
+        print(e)
+
+""" OPEN AI """
+if data['openAI']:
+    try:
+        # Set the model and prompt
+        openai.api_key = config['OPENAI']['api_key']
+        model_engine = "gpt-3.5-turbo"
+        prompt = "Summarize the video game {} in 30 words or fewer. Include the genre and the name of the developer.".format(
+            game_title)
+
+        # Set the maximum number of tokens to generate in the response
+        max_tokens = 200
+
+        # Generate a response
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": prompt},
+            ]
+        )
+
+        # Print the response
+        print(completion['choices'][0]['message']['content'])
+        with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
+            bottom_text_file.write(
+                completion['choices'][0]['message']['content'].strip())
+    except Exception as e:
+        print('OPENAI ERROR')
         print(e)
 
 
