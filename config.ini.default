@@ -18,10 +18,13 @@ webhook_url = webhook_url
 [IGDB]
 token = token
 
-[OPENAI]
-api_key = api_key
-
 [YOUTUBE]
 client_id = client_id
 client_secret = client_secret
 refresh_token = refresh_token
+
+[OPENAI]
+api_key = api_key
+
+[LOCAL]
+meta_path = path_to_local_folder

@@ -187,7 +187,7 @@ if data['twitch']:
 
         """" Get game id """
         game_id_args = urlencode({
-            'name': game_title
+            'name': 'Retro' if data['retro'] else game_title
         })
         game_id_url = 'https://api.twitch.tv/helix/games?' + game_id_args
         game_id_request = http.request(

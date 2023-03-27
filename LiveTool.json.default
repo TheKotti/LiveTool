@@ -9,5 +9,6 @@
   "discord": false,
   "twitter": false,
   "igdb": false,
-  "igdbBottomText": false
+  "igdbBottomText": false,
+  "retro": false
 }
