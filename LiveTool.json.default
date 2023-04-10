@@ -9,6 +9,12 @@
   "discord": false,
   "twitter": false,
   "igdb": false,
-  "igdbBottomText": false,
-  "retro": false
+  "retro": false,
+  "bottomText": "none",
+  "bottomText_options": [
+    "initial",
+    "none",
+    "openAI",
+    "IGDB"
+  ]
 }
