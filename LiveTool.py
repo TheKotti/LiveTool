@@ -74,13 +74,10 @@ if data['igdb']:
                 games_list.append(elem['name'])
 
                 if 'release_dates' in elem:
-
-                    """ Hacky shit to filter unreleased games. I can't into Python """
-                    if len(elem['release_dates']) == 1 and 'y' not in elem['release_dates'][0]:
-                        release_year = '???'
-                    else:
-                        release_year = min(
-                            elem['release_dates'], key=itemgetter('y'))['y']
+                    y_values = [item['y'] for item in elem['release_dates']
+                                if 'y' in item and isinstance(item['y'], (int, float))]
+                    smallest_y = min(y_values) if y_values else '???'
+                    release_year = smallest_y
                 else:
                     release_year = '???'
 
