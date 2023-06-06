@@ -306,7 +306,7 @@ if data['bottomText'] == 'openAI':
 
 
 """ CLEAR BOTTOMTEXT """
-if data['bottomText'] == 'clear':
+if data['bottomText'] == 'none':
     with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
         bottom_text_file.write('')
 
