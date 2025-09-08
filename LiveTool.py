@@ -3,17 +3,11 @@ import os
 import sys
 import configparser
 import requests
-import twitter
 import urllib3
-import datetime
 import difflib
 import time
-import openai
 from urllib.parse import urlencode
 from discord_webhook import DiscordWebhook
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 from operator import itemgetter
 
 location = sys.path[0]
@@ -193,54 +187,6 @@ if data['twitch']:
         print("TWITCH ERROR")
         print(e)
 
-"""YOUTUBE"""
-if data['youtube']:
-    try:
-        """If no refresh token is set, create one"""
-        if config['YOUTUBE']['refresh_token'] == 'refresh_token':
-            yt_scopes = ['https://www.googleapis.com/auth/youtube']
-            yt_secrets = 'youtube_secret.json'
-            flow = InstalledAppFlow.from_client_secrets_file(
-                yt_secrets, yt_scopes)
-            credentials = flow.run_console()
-            config.set('YOUTUBE', 'refresh_token', credentials.refresh_token)
-            with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
-                config.write(cnf_file)
-
-        yt_credentials = Credentials(
-            None,
-            refresh_token=config['YOUTUBE']['refresh_token'],
-            token_uri="https://accounts.google.com/o/oauth2/token",
-            client_id=config['YOUTUBE']['client_id'],
-            client_secret=config['YOUTUBE']['client_secret'],
-        )
-
-        youtube = build('youtube', 'v3', credentials=yt_credentials)
-        timeNow = datetime.datetime.now().isoformat()[:-6] + '000Z'
-
-        list_broadcasts_request = youtube.liveBroadcasts().list(
-            part='id,snippet',
-            maxResults=1,
-            mine=True,
-            broadcastType='all'
-        )
-
-        list_broadcasts_response = list_broadcasts_request.execute()
-        broadcast_snippet = list_broadcasts_response['items'][0]['snippet']
-        broadcast_snippet['title'] = title
-
-        update_broadcast_request = youtube.liveBroadcasts().update(
-            part='id,snippet',
-            body=dict(
-                snippet=broadcast_snippet,
-                id=list_broadcasts_response['items'][0]['id']
-            )
-        ).execute()
-        print('Youtube info changed')
-    except Exception as e:
-        print("YOUTUBE ERROR")
-        print(e)
-
 
 """DISCORD"""
 if data['discord']:
@@ -253,62 +199,6 @@ if data['discord']:
     except Exception as e:
         print("DISCORD ERROR")
         print(e)
-
-
-"""TWITTER"""
-if data['twitter']:
-    try:
-        tweet = "[🔴LIVE]\n\n" + title + "\n\n" + stream_url
-        twitterApi = twitter.Api(consumer_key=config['TWITTER']['consumer_key'],
-                                 consumer_secret=config['TWITTER']['consumer_secret'],
-                                 access_token_key=config['TWITTER']['access_token_key'],
-                                 access_token_secret=config['TWITTER']['access_token_secret'])
-
-        twitter_res = twitterApi.PostUpdate(tweet)
-
-        config.set('TWITTER', 'last_tweet', twitter_res.id_str)
-        with open(os.path.join(location, "config.ini"), 'w') as cnf_file:
-            config.write(cnf_file)
-        print('Tweet posted')
-    except Exception as e:
-        print("TWITTER ERROR")
-        print(e)
-
-
-""" OPEN AI """
-if data['bottomText'] == 'openAI':
-    try:
-        # Set the model and prompt
-        openai.api_key = config['OPENAI']['api_key']
-        model_engine = "gpt-3.5-turbo"
-        prompt = "Summarize the video game {} in 30 words or fewer. Include the genre and the name of the developer.".format(
-            game_title)
-
-        # Set the maximum number of tokens to generate in the response
-        max_tokens = 200
-
-        # Generate a response
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": prompt},
-            ]
-        )
-
-        # Print the response
-        print(completion['choices'][0]['message']['content'])
-        with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
-            bottom_text_file.write(
-                completion['choices'][0]['message']['content'].strip())
-    except Exception as e:
-        print('OPENAI ERROR')
-        print(e)
-
-
-""" CLEAR BOTTOMTEXT """
-if data['bottomText'] == 'none':
-    with open(config['LOCAL']['meta_path'] + '/bottomtext.txt', 'w') as bottom_text_file:
-        bottom_text_file.write('')
 
 
 print('Exiting...')
