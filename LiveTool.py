@@ -51,7 +51,7 @@ if data['igdb']:
             'POST',
             'https://api.igdb.com/v4/games',
             body='search "' + game_title +
-            '"; fields name,category,cover.image_id,release_dates.y,genres.name,themes.name,involved_companies.company.name, involved_companies.developer;',
+            '"; fields name,game_type,cover.image_id,release_dates.y,genres.name,themes.name,involved_companies.company.name, involved_companies.developer;',
             headers={
                 'Content-Type': 'application/json',
                 'Authorization': config['IGDB']['token'],
@@ -64,7 +64,7 @@ if data['igdb']:
         genres = []
         developers = []
         for elem in games_data:
-            if elem['category'] in [0, 3, 4, 8]:  # [game, bundle, standalone_expansion, remake]
+            if elem['game_type'] in [0, 3, 4, 8]:  # [game, bundle, standalone_expansion, remake]
                 games_list.append(elem['name'])
 
                 if 'release_dates' in elem:
