@@ -147,8 +147,13 @@ if data['twitch']:
                 config.write(cnf_file)
 
         """" Get game id """
+        used_title = game_title
+        if data['retro']:
+            used_title = 'Retro'
+        if data['gamesdemos']:
+            used_title = 'Games + Demos'
         game_id_args = urlencode({
-            'name': 'Retro' if data['retro'] else game_title
+            'name': used_title
         })
         game_id_url = 'https://api.twitch.tv/helix/games?' + game_id_args
         game_id_request = http.request(
