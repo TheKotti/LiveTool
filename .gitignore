@@ -3,6 +3,8 @@
 
 config.ini
 LiveTool.json
+youtube_credentials.json
+token.json
 .vscode/
 
 ### Python ###

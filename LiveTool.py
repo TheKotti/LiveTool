@@ -4,11 +4,17 @@ import sys
 import configparser
 import requests
 import urllib3
+import datetime
 import difflib
 import time
 from urllib.parse import urlencode
 from discord_webhook import DiscordWebhook
-from operator import itemgetter
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+import google.auth.exceptions
+
 
 location = sys.path[0]
 
@@ -196,7 +202,7 @@ if data['twitch']:
 """DISCORD"""
 if data['discord']:
     try:
-        discord_message = title + ": " + stream_url
+        discord_message = title + ": " + stream_url + " <@&1377374448654614590>" 
         webhook = DiscordWebhook(
             url=config['DISCORD']['webhook_url'], content=discord_message)
         webhook.execute()
@@ -206,6 +212,91 @@ if data['discord']:
         print(e)
 
 
+"""YOUTUBE"""
+if data['youtube']:
+    try:
+        yt_scopes = ['https://www.googleapis.com/auth/youtube']
+        yt_credentials = 'youtube_credentials.json'
+        creds = None
+        # The file token.json stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        if os.path.exists('token.json'):
+            creds = Credentials.from_authorized_user_file('token.json', yt_scopes)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    yt_credentials, yt_scopes)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open('token.json', 'w') as token:
+                token.write(creds.to_json())
+
+        youtube = build('youtube', 'v3', credentials=creds)
+        timeNow = datetime.datetime.now().isoformat()[:-6] + '000Z'
+
+        """insert_broadcasts_request = youtube.liveBroadcasts().insert(
+            part="snippet,status",
+            body=dict(
+                snippet=dict(
+                    title=title, 
+                    scheduledStartTime=timeNow), 
+                status=dict(privacyStatus="public")
+            ))
+
+        res = insert_broadcasts_request.execute()
+
+        update_broadcasts_request = youtube.liveBroadcasts().update(
+            part='id,snippet,monetizationDetails',
+            body=dict(
+                snippet=res["snippet"],
+                id=res['id'],
+                monetizationDetails=dict(
+                    adsMonetizationStatus="on",
+                    cuepointSchedule=dict(
+                        enabled="true",
+                        ytOptimizedCuepointConfig="MEDIUM"
+                    )
+                )
+            )
+        )
+
+        res2 = update_broadcasts_request.execute()"""
+
+        list_broadcasts_request = youtube.liveBroadcasts().list(
+            part='id,snippet',
+            maxResults=1,
+            mine=True,
+            broadcastType='all',
+        )
+        list_broadcasts_response = list_broadcasts_request.execute()
+
+        broadcast_snippet = list_broadcasts_response['items'][0]['snippet']
+        broadcast_snippet['title'] = title
+
+        broadcast_status = list_broadcasts_response['items'][0]['status']
+        broadcast_status['privacyStatus'] = 'public'
+
+        update_broadcast_request = youtube.liveBroadcasts().update(
+            part='id,snippet',
+            body=dict(
+                snippet=broadcast_snippet,
+                status=broadcast_status,
+                id=list_broadcasts_response['items'][0]['id']
+            )
+        )
+        update_broadcast_request.execute()
+        
+        print('Youtube info changed')
+    except Exception as e:
+        print("YOUTUBE ERROR")
+        print(e)
+
+
+
 print('Exiting...')
-time.sleep(3)
+time.sleep(5)
 exit()
