@@ -236,60 +236,56 @@ if data['youtube']:
                 token.write(creds.to_json())
 
         youtube = build('youtube', 'v3', credentials=creds)
-        timeNow = datetime.datetime.now().isoformat()[:-6] + '000Z'
 
-        """insert_broadcasts_request = youtube.liveBroadcasts().insert(
-            part="snippet,status",
-            body=dict(
-                snippet=dict(
-                    title=title, 
-                    scheduledStartTime=timeNow), 
-                status=dict(privacyStatus="public")
-            ))
-
-        res = insert_broadcasts_request.execute()
-
-        update_broadcasts_request = youtube.liveBroadcasts().update(
-            part='id,snippet,monetizationDetails',
-            body=dict(
-                snippet=res["snippet"],
-                id=res['id'],
-                monetizationDetails=dict(
-                    adsMonetizationStatus="on",
-                    cuepointSchedule=dict(
-                        enabled="true",
-                        ytOptimizedCuepointConfig="MEDIUM"
-                    )
-                )
-            )
-        )
-
-        res2 = update_broadcasts_request.execute()"""
-
-        list_broadcasts_request = youtube.liveBroadcasts().list(
-            part='id,snippet',
-            maxResults=1,
-            mine=True,
+        upcoming_response = youtube.liveBroadcasts().list(
+            part='id,snippet,status',
+            broadcastStatus='upcoming',
             broadcastType='all',
-        )
-        list_broadcasts_response = list_broadcasts_request.execute()
+            mine=True,
+            maxResults=5,
+        ).execute()
+        upcoming_items = upcoming_response.get('items', [])
 
-        broadcast_snippet = list_broadcasts_response['items'][0]['snippet']
-        broadcast_snippet['title'] = title
+        if upcoming_items:
+            broadcast = upcoming_items[0]
+            broadcast['snippet']['title'] = title
+            broadcast['status']['privacyStatus'] = 'public'
+            youtube.liveBroadcasts().update(
+                part='id,snippet,status',
+                body=dict(
+                    id=broadcast['id'],
+                    snippet=broadcast['snippet'],
+                    status=broadcast['status'],
+                )
+            ).execute()
+            print('Updated existing upcoming broadcast (' + broadcast['id'] + ')')
+        else:
+            time_now = datetime.datetime.now().isoformat()[:-6] + '000Z'
+            broadcast = youtube.liveBroadcasts().insert(
+                part='snippet,status',
+                body=dict(
+                    snippet=dict(
+                        title=title,
+                        scheduledStartTime=time_now,
+                    ),
+                    status=dict(privacyStatus='public'),
+                )
+            ).execute()
 
-        broadcast_status = list_broadcasts_response['items'][0]['status']
-        broadcast_status['privacyStatus'] = 'public'
+            streams_response = youtube.liveStreams().list(
+                part='id',
+                mine=True,
+                maxResults=1,
+            ).execute()
+            stream_items = streams_response.get('items', [])
+            if stream_items:
+                youtube.liveBroadcasts().bind(
+                    part='id,contentDetails',
+                    id=broadcast['id'],
+                    streamId=stream_items[0]['id'],
+                ).execute()
+            print('Created new broadcast (' + broadcast['id'] + ')')
 
-        update_broadcast_request = youtube.liveBroadcasts().update(
-            part='id,snippet',
-            body=dict(
-                snippet=broadcast_snippet,
-                status=broadcast_status,
-                id=list_broadcasts_response['items'][0]['id']
-            )
-        )
-        update_broadcast_request.execute()
-        
         print('Youtube info changed')
     except Exception as e:
         print("YOUTUBE ERROR")
